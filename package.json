@@ -1,0 +1,38 @@
+{
+  "name": "castle-core",
+  "version": "0.2.0",
+  "description": "An embedded DSL for generating C code from JS",
+  "main": "./lib/index.js",
+  "types": "./declarations/index.d.ts",
+  "scripts": {
+    "prepublish": "gulp default",
+    "build": "gulp default",
+    "watch": "gulp watch",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KolesnichenkoDS/castle-core.git"
+  },
+  "keywords": [
+    "castle",
+    "codegen",
+    "edsl"
+  ],
+  "author": "Daniil Kolesnichenko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KolesnichenkoDS/castle-core/issues"
+  },
+  "homepage": "https://castle-lang.github.io",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "gulp": "^3.9.1",
+    "gulp-cli": "^1.2.2",
+    "gulp-typescript": "^3.0.2",
+    "gulp-watch": "^4.3.10",
+    "merge2": "^1.0.2",
+    "mocha": "^3.2.0",
+    "typescript": "^2.1.5"
+  }
+}
