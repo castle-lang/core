@@ -2,7 +2,7 @@
     "compilerOptions": {
         "alwaysStrict": true,
         "declaration": true,
-        "declarationDir": "./types",
+        "declarationDir": "./declarations",
         "forceConsistentCasingInFileNames": true,
         "module": "commonjs",
         "noImplicitAny": true,

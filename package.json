@@ -1,6 +1,6 @@
 {
   "name": "castle-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "An embedded DSL for generating C code from JS",
   "main": "./lib/index.js",
   "types": "./declarations/index.d.ts",
