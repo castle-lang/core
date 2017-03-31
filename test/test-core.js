@@ -1,6 +1,6 @@
 const {assert} = require('chai');
-const castle = require('../lib');
-const types = require('../lib/types');
+const castle = require('..');
+const types = castle.types;
 
 describe('C target', () => {
     const context = new castle.Context();
