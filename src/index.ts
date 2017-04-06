@@ -237,7 +237,10 @@ export class Define extends Def implements Callable<FnCall> {
                 args = compileAll(this.args, context).join(', ');
                 return `${ret} ${this.name}(${args}) ${this.body.compile(context)}`;
             case 'rust':
-                return context.unsupportedFeature('function extern');
+                ret = ret_.compile(context);
+                args = compileAll(this.args, context).join(', ');
+                // TODO: should all functions be public?
+                return `fn ${this.name}(${args}): ${ret} ${this.body.compile(context)}`;
             default:
                 return context.unknownTarget();
         }
@@ -405,7 +408,13 @@ export class IfElse extends Stmt {
                 }
                 return ret;
             case 'rust':
-                return context.unsupportedFeature('if-else statements');
+                ret += 'if ' + this.cases.map(c => {
+                    return `${c.cond.compile(context)} ${c.body.compile(context)}`;
+                }).join(' else if ');
+                if (this.defaultCase !== null) {
+                    ret += ` else ${(this.defaultCase as Block).compile(context)}`;
+                }
+                return ret;
             default:
                 return context.unknownTarget();
         }
