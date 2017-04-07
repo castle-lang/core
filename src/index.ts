@@ -46,7 +46,7 @@ export class Context {
 
     /** Constants that are known in compile-time. */
     constants: {[key: string]: Node} = {
-        CASTLE_VERSION: new types.StrLiteral("0.1.0"),
+        CASTLE_VERSION: new types.StrLiteral("0.2.1"),
     };
 
     /** Type aliases. */
