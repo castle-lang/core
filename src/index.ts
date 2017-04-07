@@ -119,7 +119,12 @@ export abstract class Def implements Node {
 
 /** Pattern — can be used in assignments, match statements etc. */
 export interface Pat extends Node {
-    match(expr: Expr, context: Context): {[key: string]: Expr};
+    match(expr: Expr, context: Context): MatchResult[];
+}
+
+export type MatchResult = {
+    readonly name: string,
+    readonly value: Expr,
 }
 
 export class Module extends Def {
@@ -359,7 +364,10 @@ export class Assign extends Stmt {
             case 'c':
             case 'cpp':
             case 'rust':
-                return `${this.lvalue.compile(context)} = ${this.rvalue.compile(context)}`;
+                return this.lvalue
+                    .match(this.rvalue, context)
+                    .map((m: MatchResult) => `${m.name} = ${m.value.compile(context)}`)
+                    .join(';\n');
             default:
                 return context.unknownTarget();
         }
@@ -380,8 +388,8 @@ export class Var extends Expr implements Pat {
         return this.name;
     }
     
-    match(expr: Expr, _: Context): {[key: string]: Expr} {
-        return {[this.name]: expr};
+    match(expr: Expr, _: Context): MatchResult[] {
+        return [ { name: this.name, value: expr } ];
     }
 }
 
