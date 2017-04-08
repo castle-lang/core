@@ -72,6 +72,17 @@ export class Context {
         extend(this.typedefs, typedefs);
     }
 
+    clone(): Context {
+        return new Context(
+            this.target,
+            this.typeCheck,
+            this.borrowCheck,
+            this.constants,
+            this.typedefs,
+            this.verbose
+        );
+    }
+
     getType(type: string): types.Type {
         if (this.typedefs[type] !== undefined) return this.typedefs[type];
         return new types.RawType(type);
