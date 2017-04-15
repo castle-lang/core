@@ -8,7 +8,8 @@
     "prepublish": "gulp default",
     "build": "gulp default",
     "watch": "gulp watch",
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "tslint -c tslint.json src/**.ts"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
     "gulp-watch": "^4.3.10",
     "merge2": "^1.0.2",
     "mocha": "^3.2.0",
+    "tslint": "^5.1.0",
     "typescript": "^2.1.5"
   }
 }
