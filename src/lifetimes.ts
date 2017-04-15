@@ -1,5 +1,5 @@
-import {Node, Context} from './index';
+import {Context, Node} from './index';
 
 export abstract class Lifetime implements Node {
-    abstract compile(context: Context): string;
+  public abstract compile(context: Context): string;
 }
