@@ -81,6 +81,76 @@ export class StrType extends Type {
   }
 }
 
+export class OwnedStrType extends Type {
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'rust':
+        return 'String';
+      case 'c':
+      case 'c++':
+        return context.unsupportedFeature('owned string type');
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export const ownedStr = new OwnedStrType();
+
+export class ArrayType extends Type {
+  public readonly itemType: Type;
+  public readonly length: number;
+
+  public constructor(itemType: Type, length: number) {
+    super();
+    this.itemType = itemType;
+    this.length = length;
+  }
+
+  public compile(context: Context): string {
+    const itemType = this.itemType.compile(context);
+
+    switch (context.target) {
+      case 'c':
+        return `*${itemType}`;
+      case 'c++':
+        return `${itemType}[]`;
+      case 'rust':
+        return `[${itemType}; ${this.length}]`;
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export const array = (itemType: Type, length: number): Type => new ArrayType(itemType, length);
+
+export class SliceType extends Type {
+  public readonly itemType: Type;
+
+  public constructor(itemType: Type) {
+    super();
+    this.itemType = itemType;
+  }
+
+  public compile(context: Context): string {
+    const itemType = this.itemType.compile(context);
+
+    switch (context.target) {
+      case 'c':
+        return `*${itemType}`;
+      case 'c++':
+        return `${itemType}[]`;
+      case 'rust':
+        return `&[${itemType}]`;
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export const slice = (itemType: Type): Type => new SliceType(itemType);
+
 export class RawType extends Type {
   public readonly name: string;
 

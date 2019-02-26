@@ -411,11 +411,16 @@ export class Var extends Expr implements Pat {
   }
 }
 
+export interface IfBranch {
+  cond: Expr;
+  body: Block;
+}
+
 export class IfElse extends Stmt {
-  public readonly cases: Array<{ cond: Expr, body: Block }>;
+  public readonly cases: IfBranch[];
   public readonly defaultCase: Block | null;
 
-  constructor(cases: Array<{ cond: Expr, body: Block }>, defaultCase: Block | null) {
+  constructor(cases: IfBranch[], defaultCase: Block | null) {
     super();
     this.cases = cases;
     this.defaultCase = defaultCase;
