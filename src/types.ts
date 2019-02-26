@@ -1,9 +1,19 @@
+/**
+ * This module contains declaration of classes that represent types and literal
+ * expressions.
+ */
+
 import {Context, Expr, Node} from './index';
 
 /** @singletone */
 export abstract class Type implements Node {
   public abstract compile(context: Context): string;
 }
+
+/**
+ * Type-level value.
+ */
+type Generic = Type | number | ((t: Generic) => Generic);
 
 export abstract class Literal implements Node {
   public abstract compile(context: Context): string;
@@ -147,7 +157,7 @@ export class ArrayType extends Type {
   }
 }
 
-export const array = (itemType: Type, length: number): Type => new ArrayType(itemType, length);
+export const array: Generic = (itemType: Type) => (length: number) => new ArrayType(itemType, length);
 
 export class SliceType extends Type {
   public readonly itemType: Type;
@@ -173,7 +183,7 @@ export class SliceType extends Type {
   }
 }
 
-export const slice = (itemType: Type): Type => new SliceType(itemType);
+export const slice: Generic = (itemType: Type): Type => new SliceType(itemType);
 
 export class RawType extends Type {
   public readonly name: string;
