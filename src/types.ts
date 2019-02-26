@@ -53,6 +53,10 @@ export class IntType extends Type {
 export const int = new IntType();
 
 export class StrLiteral extends Literal {
+  private static escapeString(s: string): string {
+    return s; // TODO.
+  }
+
   public readonly value: string;
 
   constructor(value: string) {
@@ -61,7 +65,7 @@ export class StrLiteral extends Literal {
   }
 
   public compile(context: Context): string {
-    return `"${this.value}"`; // TODO: escape special characters
+    return `"${StrLiteral.escapeString(this.value)}"`;
   }
 }
 
