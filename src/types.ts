@@ -1,4 +1,4 @@
-import {Context, Node} from './index';
+import {Context, Expr, Node} from './index';
 
 /** @singletone */
 export abstract class Type implements Node {
@@ -101,6 +101,26 @@ export class OwnedStrType extends Type {
 
 export const ownedStr = new OwnedStrType();
 
+export class ArrayLiteral extends Literal {
+  public elements: Expr[];
+
+  constructor(elements: Expr[]) {
+    super();
+    this.elements = elements;
+  }
+
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+      case 'rust':
+        return `[${this.elements.map((e: Expr) => e.compile(context)).join(', ')}]`;
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
 export class ArrayType extends Type {
   public readonly itemType: Type;
   public readonly length: number;
@@ -168,4 +188,4 @@ export class RawType extends Type {
 
 export const str = new StrType();
 
-export const prelude: {[key: string]: Type} = {int, str, auto};
+export const prelude: {[key: string]: Type} = {int, str, ownedStr, auto};
