@@ -136,10 +136,15 @@ export abstract class Def implements Node {
 
 /** Pattern — can be used in assignments, match statements etc. */
 export interface Pat extends Node {
-  match(expr: Expr, context: Context): MatchResult[];
+  match(expr: Expr, context: Context): Match;
 }
 
-export interface MatchResult {
+export interface Match {
+  stmts: Stmt[];
+  assigns: MatchAssign[];
+}
+
+export interface MatchAssign {
   name: string;
   value: Expr;
 }
@@ -382,10 +387,13 @@ export class Assign extends Stmt {
       case 'c':
       case 'cpp':
       case 'rust':
-        return this.lvalue
-          .match(this.rvalue, context)
-          .map((m: MatchResult) => `${m.name} = ${m.value.compile(context)}`)
-          .join(';\n');
+        const match = this.lvalue.match(this.rvalue, context);
+        const stmts = match.stmts.map((s: Stmt) => s.compile).join('\n');
+        const assigns = match
+          .assigns
+          .map((m: MatchAssign) => `${m.name} = ${m.value.compile(context)};`)
+          .join('\n');
+        return `${stmts}\n${assigns}`;
       default:
         return context.unknownTarget();
     }
@@ -406,8 +414,11 @@ export class Var extends Expr implements Pat {
     return this.name;
   }
 
-  public match(expr: Expr, _: Context): MatchResult[] {
-    return [ { name: this.name, value: expr } ];
+  public match(expr: Expr, _: Context): Match {
+    return {
+      assigns: [ { name: this.name, value: expr } ],
+      stmts: [],
+    };
   }
 }
 
