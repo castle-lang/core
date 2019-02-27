@@ -1,4 +1,3 @@
-import * as lifetimes from './lifetimes';
 import * as types from './types';
 
 import {compileAll, copy, extend} from './utils';
@@ -6,7 +5,6 @@ import {compileAll, copy, extend} from './utils';
 declare const module: any;
 if (module.exports) {
   module.exports.types = types;
-  module.exports.lifetimes = lifetimes;
 }
 
 /**
@@ -40,11 +38,6 @@ export class Context {
   /** Compilation target. */
   public readonly target: string;
 
-  /** Typechecker options. */
-  public readonly typeCheck: CheckInfer<types.Type>;
-  /** Borrowchecker options. */
-  public readonly borrowCheck: CheckInfer<lifetimes.Lifetime>;
-
   /** Constants that are known in compile-time. */
   public constants: {[key: string]: Node} = {
     CASTLE_VERSION: new types.StrLiteral('0.2.1'),
@@ -58,8 +51,6 @@ export class Context {
 
   constructor(
     target: string = 'c',
-    typeCheck: CheckInfer<types.Type> = defaultCheckInfer,
-    borrowCheck: CheckInfer<lifetimes.Lifetime> = defaultCheckInfer,
     constants: {[key: string]: Node} = {},
     typedefs: {[key: string]: types.Type} = {},
     verbose: boolean = true,
@@ -70,8 +61,6 @@ export class Context {
     }
 
     this.target = target;
-    this.typeCheck = typeCheck;
-    this.borrowCheck = borrowCheck;
     extend(this.constants, constants);
     extend(this.typedefs, typedefs);
   }
@@ -79,8 +68,6 @@ export class Context {
   public clone(): Context {
     return new Context(
       this.target,
-      this.typeCheck,
-      this.borrowCheck,
       this.constants,
       this.typedefs,
       this.verbose,
@@ -110,16 +97,6 @@ export interface CheckError<T> {
   lineNumber: number;
   expected: T;
   found: T;
-}
-
-/**
- * Typechecker/borrowchecker options.
- */
-export interface CheckInfer<T> {
-  /** Check option — if set, the types/borrows will be checked. */
-  check: boolean | ((node: Node, context: Context) => CheckError<T> | null);
-  /** Infer option — if set, the types/lifetimes will be inferred. */
-  infer: boolean | ((node: Node, context: Context) => T);
 }
 
 const defaultCheckInfer = {check: false, infer: false};

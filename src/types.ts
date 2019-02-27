@@ -34,6 +34,41 @@ export class AutoType extends Type {
 
 export const auto = new AutoType();
 
+export class BoolLiteral extends Literal {
+  public value: boolean;
+
+  public constructor(value: boolean) {
+    super();
+    this.value = value;
+  }
+
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+        return this.value ? '1' : '0';
+      case 'c++':
+      case 'rust':
+        return this.value.toString();
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export class BoolType extends Type {
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+        return 'int';
+      case 'c++':
+      case 'rust':
+        return 'bool';
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
 export class IntLiteral extends Literal {
   public readonly value: number;
 
@@ -42,7 +77,9 @@ export class IntLiteral extends Literal {
     this.value = value;
   }
 
-  public compile(context: Context): string { return this.value.toString(); }
+  public compile(context: Context): string {
+    return Math.floor(this.value).toString();
+  }
 }
 
 /** @singletone */
@@ -62,9 +99,60 @@ export class IntType extends Type {
 
 export const int = new IntType();
 
+export class FloatLiteral extends Literal {
+  public readonly value: number;
+
+  constructor(value: number) {
+    super();
+    this.value = value;
+  }
+
+  public compile(context: Context): string {
+    let s = this.value.toString();
+    if (s.indexOf('.') === -1) {
+      s += '.0';
+    }
+    return s;
+  }
+}
+
+/** @singletone */
+export class FloatType extends Type {
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+        return 'float';
+      case 'rust':
+        return 'f32';
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export const float = new FloatType();
+
 export class StrLiteral extends Literal {
   private static escapeString(s: string): string {
-    return s; // TODO.
+    let result = '';
+    for (const c of s) {
+      switch (c) {
+        case '"':
+          result += '\\"';
+          break;
+        case '\n':
+          result += '\\n';
+          break;
+        case '\t':
+          result += '\\t';
+          break;
+        default:
+          result += c;
+          break;
+      }
+    }
+    return result;
   }
 
   public readonly value: string;
@@ -95,6 +183,7 @@ export class StrType extends Type {
   }
 }
 
+/** @singletone */
 export class OwnedStrType extends Type {
   public compile(context: Context): string {
     switch (context.target) {
@@ -185,6 +274,50 @@ export class SliceType extends Type {
 
 export const slice: Generic = (itemType: Type): Type => new SliceType(itemType);
 
+export class NamedStructLiteral extends Literal {
+  public readonly name: string;
+  public readonly contents: StructLiteral;
+
+  public constructor(name: string, contents: {[key: string]: Expr} | StructLiteral) {
+    super();
+    this.name = name;
+    this.contents = (contents instanceof StructLiteral) ? contents : new StructLiteral(contents);
+  }
+
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+        return context.unsupportedFeature('named struct literal');
+      case 'rust':
+        return `${this.name} ${this.contents.compile(context)}`;
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export class StructLiteral extends Literal {
+  public readonly contents: {[key: string]: Expr};
+
+  public constructor(contents: {[key: string]: Expr}) {
+    super();
+    this.contents = contents;
+  }
+
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+        return context.unsupportedFeature('struct literal');
+      case 'rust':
+        return Object.keys(this.contents).map((k: string) => `${k}: ${this.contents[k]},`).join('\n');
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
 export class RawType extends Type {
   public readonly name: string;
 
@@ -195,6 +328,8 @@ export class RawType extends Type {
 
   public compile(_: Context): string { return this.name; }
 }
+
+export const raw = (name: string): Type => new RawType(name);
 
 export const str = new StrType();
 
