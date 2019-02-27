@@ -12,19 +12,19 @@ export const compileAll = (
   context: castle.Context,
 ): string[] => nodes.map((n) => n.compile(context));
 
-export const copy = (obj: Dict<any>): Dict<any> => {
-  const c: Dict<any> = {};
+export const copy = <T>(obj: Dict<T>): Dict<T> => {
+  const objCopy: Dict<T> = {};
 
   for (const k in obj) {
     if (obj.hasOwnProperty(k)) {
-      c[k] = obj[k];
+      objCopy[k] = obj[k];
     }
   }
 
-  return obj;
+  return objCopy;
 };
 
-export const extend = (dest: Dict<any>, source: Dict<any>) => {
+export const extend = <T>(dest: Dict<T>, source: Dict<T>) => {
   for (const key in source) {
     if (source.hasOwnProperty(key)) {
       dest[key] = source[key];

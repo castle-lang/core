@@ -46,7 +46,7 @@ export class Context {
   /** Type aliases. */
   public typedefs: {[key: string]: types.Type} = copy(types.prelude);
 
-  /** Verbose option — if set, the code will be commented. */
+  /** Verbose option - if set, the code will be commented. */
   public readonly verbose: boolean;
 
   constructor(
@@ -90,28 +90,11 @@ export class Context {
   }
 }
 
-/**
- * Typechecker/borrowchecker error information.
- */
-export interface CheckError<T> {
-  lineNumber: number;
-  expected: T;
-  found: T;
-}
+export interface Stmt extends Node {}
+export interface Expr extends Stmt {}
+export interface Def extends Node {}
 
-const defaultCheckInfer = {check: false, infer: false};
-
-export abstract class Stmt implements Node {
-  public abstract compile(context: Context): string;
-}
-
-export abstract class Expr extends Stmt {}
-
-export abstract class Def implements Node {
-  public abstract compile(context: Context): string;
-}
-
-/** Pattern — can be used in assignments, match statements etc. */
+/** Pattern - can be used in assignments, match statements etc. */
 export interface Pat extends Node {
   match(expr: Expr, context: Context): Match;
 }
@@ -126,12 +109,11 @@ export interface MatchAssign {
   value: Expr;
 }
 
-export class Module extends Def {
+export class Module implements Def {
   /** Module-level definitions. */
   public readonly defs: Def[];
 
   constructor(defs: Def[]) {
-    super();
     this.defs = defs;
   }
 
@@ -148,11 +130,10 @@ export class Module extends Def {
   }
 }
 
-export class Block extends Expr {
+export class Block implements Expr {
   public readonly stmts: Stmt[];
 
   constructor(stmts: Stmt[]) {
-    super();
     this.stmts = stmts;
   }
 
@@ -174,7 +155,7 @@ export class Block extends Expr {
 /**
  * Castle function declaration (without implementation).
  */
-export class Extern extends Def implements Callable<FnCall> {
+export class Extern implements Def, Callable<FnCall> {
   /** Function name. */
   public readonly name: string;
   /** Function arguments. */
@@ -183,7 +164,6 @@ export class Extern extends Def implements Callable<FnCall> {
   public readonly ret: types.Type | string;
 
   constructor(name: string, args: Arg[], ret: types.Type | string) {
-    super();
     this.name = name;
     this.args = args;
     this.ret = ret;
@@ -213,7 +193,7 @@ export class Extern extends Def implements Callable<FnCall> {
 /**
  * Castle function definition (with implementation).
  */
-export class Define extends Def implements Callable<FnCall> {
+export class Define implements Def, Callable<FnCall> {
   /** Function name. */
   public readonly name: string;
   /** Function arguments. */
@@ -224,7 +204,6 @@ export class Define extends Def implements Callable<FnCall> {
   public readonly body: Block;
 
   constructor(name: string, args: Arg[], ret: types.Type | string, body: Block) {
-    super();
     this.name = name;
     this.args = args;
     this.body = body;
@@ -245,7 +224,7 @@ export class Define extends Def implements Callable<FnCall> {
         return `${retCompiled} ${this.name}(${args}) ${body}`;
       case 'rust':
         // TODO: should all functions be public?
-        return `fn ${this.name}(${args}): ${retCompiled} ${body}`;
+        return `fn ${this.name}(${args}) -> ${retCompiled} ${body}`;
       default:
         return context.unknownTarget();
     }
@@ -256,12 +235,11 @@ export class Define extends Def implements Callable<FnCall> {
   }
 }
 
-export class FnCall extends Expr {
+export class FnCall implements Expr {
   public readonly fn: Extern | Define | string;
   public readonly args: Expr[];
 
   constructor(fn: Extern | Define | string, args: Expr[]) {
-    super();
     this.fn = fn;
     this.args = args;
   }
@@ -308,11 +286,10 @@ export class Arg implements Node {
   }
 }
 
-export class Return extends Stmt {
+export class Return implements Stmt {
   public readonly value: Expr;
 
   constructor(value: Expr) {
-    super();
     this.value = value;
   }
 
@@ -328,13 +305,12 @@ export class Return extends Stmt {
   }
 }
 
-export class Declare extends Stmt {
+export class Declare implements Stmt {
   public readonly name: string;
   public readonly type: types.Type | null;
   public readonly init: Expr | null;
 
   constructor(name: string, type: types.Type | null, init: Expr | null) {
-    super();
     this.name = name;
     this.type = type;
     this.init = init;
@@ -349,12 +325,11 @@ export class Declare extends Stmt {
   }
 }
 
-export class Assign extends Stmt {
+export class Assign implements Stmt {
   public readonly lvalue: Pat;
   public readonly rvalue: Expr;
 
   constructor(lvalue: Pat, rvalue: Expr) {
-    super();
     this.lvalue = lvalue;
     this.rvalue = rvalue;
   }
@@ -377,12 +352,11 @@ export class Assign extends Stmt {
   }
 }
 
-export class Var extends Expr implements Pat {
+export class Var implements Expr, Pat {
   public readonly name: string;
   public readonly type: types.Type | null;
 
   constructor(name: string, type: types.Type | null = null) {
-    super();
     this.name = name;
     this.type = type;
   }
@@ -404,12 +378,11 @@ export interface IfBranch {
   body: Block;
 }
 
-export class IfElse extends Stmt {
+export class IfElse implements Stmt {
   public readonly cases: IfBranch[];
   public readonly defaultCase: Block | null;
 
   constructor(cases: IfBranch[], defaultCase: Block | null) {
-    super();
     this.cases = cases;
     this.defaultCase = defaultCase;
   }
@@ -440,12 +413,11 @@ export class IfElse extends Stmt {
   }
 }
 
-export class While extends Stmt {
+export class While implements Stmt {
   public readonly cond: Expr;
   public readonly body: Block;
 
   constructor(cond: Expr, body: Block) {
-    super();
     this.cond = cond;
     this.body = body;
   }
@@ -463,14 +435,13 @@ export class While extends Stmt {
   }
 }
 
-export class For extends Stmt {
+export class For implements Stmt {
   public readonly init: Stmt;
   public readonly cond: Expr;
   public readonly next: Stmt;
   public readonly body: Block;
 
   constructor(init: Stmt, cond: Expr, next: Stmt, body: Block) {
-    super();
     this.init = init;
     this.cond = cond;
     this.next = next;
@@ -488,6 +459,26 @@ export class For extends Stmt {
         return `for (${init}; ${cond}; ${next}) ${body}`;
       case 'rust':
         return context.unsupportedFeature('for loops');
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export class Loop implements Stmt {
+  public readonly body: Block;
+
+  constructor(body: Block) {
+    this.body = body;
+  }
+
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'cpp':
+        return `while (1) ${this.body.compile(context)}`;
+      case 'rust':
+        return `loop ${this.body.compile(context)}`;
       default:
         return context.unknownTarget();
     }

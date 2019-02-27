@@ -48,11 +48,51 @@ describe('C target', () => {
     });
 
     it('should print empty infinite loop', () => {
+        const whileCode = new castle.While(new types.IntLiteral(1), new castle.Block([]))
+            .compile(context)
+            .replace(/\s+/g, ' ');
+        const loopCode = new castle.Loop(new castle.Block([]))
+            .compile(context)
+            .replace(/\s+/g, ' ');
         assert.equal(
-            new castle.While(new types.IntLiteral(1), new castle.Block([]))
-                .compile(context)
-                .replace(/\s+/g, ' '),
+            whileCode,
+            'while (1) { }'
+        );
+        assert.equal(
+            loopCode,
             'while (1) { }'
         );
     });
+});
+
+describe('Rust target', () => {
+    const context = new castle.Context('rust');
+
+    const main = new castle.Define('main', [], types.unit, new castle.Block([
+        new castle.Return(new types.UnitLiteral()),
+    ]));
+
+    it('should print empty main function', () => {
+        assert.equal(
+            main.compile(context).replace(/\s+/g, ' '),
+            'fn main() -> () { return (); }'
+        );
+    });
+
+    it('should print empty infinite loop', () => {
+        const whileCode = new castle.While(new types.BoolLiteral(true), new castle.Block([]))
+            .compile(context)
+            .replace(/\s+/g, ' ');
+        const loopCode = new castle.Loop(new castle.Block([]))
+            .compile(context)
+            .replace(/\s+/g, ' ');
+        assert.equal(
+            whileCode,
+            'while true { }'
+        );
+        assert.equal(
+            loopCode,
+            'loop { }'
+        );
+    })
 });

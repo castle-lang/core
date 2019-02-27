@@ -6,27 +6,23 @@
 import {Context, Expr, Node} from './index';
 
 /** @singletone */
-export abstract class Type implements Node {
-  public abstract compile(context: Context): string;
-}
+export interface Type extends Node {}
 
 /**
  * Type-level value.
  */
 type Generic = Type | number | ((t: Generic) => Generic);
 
-export abstract class Literal implements Node {
-  public abstract compile(context: Context): string;
-}
+export interface Literal extends Expr {}
 
 /**
  * Inferred type.
  * @singletone
  */
-export class AutoType extends Type {
+export class AutoType implements Type {
   public compile(context: Context): string {
     if (context.target === 'cpp') {
-      return 'auto'; // TODO: type infer for auto type
+      return 'auto';
     }
     return context.unsupportedFeature('type infer');
   }
@@ -34,11 +30,41 @@ export class AutoType extends Type {
 
 export const auto = new AutoType();
 
-export class BoolLiteral extends Literal {
+export class UnitLiteral implements Literal {
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+        return context.unsupportedFeature('unit type literal');
+      case 'rust':
+        return '()';
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+/** @singletone */
+export class UnitType implements Type {
+  public compile(context: Context): string {
+    switch (context.target) {
+      case 'c':
+      case 'c++':
+        return 'void';
+      case 'rust':
+        return '()';
+      default:
+        return context.unknownTarget();
+    }
+  }
+}
+
+export const unit = new UnitType();
+
+export class BoolLiteral implements Literal {
   public value: boolean;
 
   public constructor(value: boolean) {
-    super();
     this.value = value;
   }
 
@@ -55,7 +81,7 @@ export class BoolLiteral extends Literal {
   }
 }
 
-export class BoolType extends Type {
+export class BoolType implements Type {
   public compile(context: Context): string {
     switch (context.target) {
       case 'c':
@@ -69,11 +95,10 @@ export class BoolType extends Type {
   }
 }
 
-export class IntLiteral extends Literal {
+export class IntLiteral implements Literal {
   public readonly value: number;
 
   constructor(value: number) {
-    super();
     this.value = value;
   }
 
@@ -83,7 +108,7 @@ export class IntLiteral extends Literal {
 }
 
 /** @singletone */
-export class IntType extends Type {
+export class IntType implements Type {
   public compile(context: Context): string {
     switch (context.target) {
       case 'c':
@@ -99,11 +124,10 @@ export class IntType extends Type {
 
 export const int = new IntType();
 
-export class FloatLiteral extends Literal {
+export class FloatLiteral implements Literal {
   public readonly value: number;
 
   constructor(value: number) {
-    super();
     this.value = value;
   }
 
@@ -117,7 +141,7 @@ export class FloatLiteral extends Literal {
 }
 
 /** @singletone */
-export class FloatType extends Type {
+export class FloatType implements Type {
   public compile(context: Context): string {
     switch (context.target) {
       case 'c':
@@ -133,7 +157,7 @@ export class FloatType extends Type {
 
 export const float = new FloatType();
 
-export class StrLiteral extends Literal {
+export class StrLiteral implements Literal {
   private static escapeString(s: string): string {
     let result = '';
     for (const c of s) {
@@ -158,7 +182,6 @@ export class StrLiteral extends Literal {
   public readonly value: string;
 
   constructor(value: string) {
-    super();
     this.value = value;
   }
 
@@ -168,7 +191,7 @@ export class StrLiteral extends Literal {
 }
 
 /** @singletone */
-export class StrType extends Type {
+export class StrType implements Type {
   public compile(context: Context): string {
     switch (context.target) {
       case 'c':
@@ -184,7 +207,7 @@ export class StrType extends Type {
 }
 
 /** @singletone */
-export class OwnedStrType extends Type {
+export class OwnedStrType implements Type {
   public compile(context: Context): string {
     switch (context.target) {
       case 'rust':
@@ -200,11 +223,10 @@ export class OwnedStrType extends Type {
 
 export const ownedStr = new OwnedStrType();
 
-export class ArrayLiteral extends Literal {
+export class ArrayLiteral implements Literal {
   public elements: Expr[];
 
   constructor(elements: Expr[]) {
-    super();
     this.elements = elements;
   }
 
@@ -220,12 +242,11 @@ export class ArrayLiteral extends Literal {
   }
 }
 
-export class ArrayType extends Type {
+export class ArrayType implements Type {
   public readonly itemType: Type;
   public readonly length: number;
 
   public constructor(itemType: Type, length: number) {
-    super();
     this.itemType = itemType;
     this.length = length;
   }
@@ -248,11 +269,10 @@ export class ArrayType extends Type {
 
 export const array: Generic = (itemType: Type) => (length: number) => new ArrayType(itemType, length);
 
-export class SliceType extends Type {
+export class SliceType implements Type {
   public readonly itemType: Type;
 
   public constructor(itemType: Type) {
-    super();
     this.itemType = itemType;
   }
 
@@ -274,12 +294,11 @@ export class SliceType extends Type {
 
 export const slice: Generic = (itemType: Type): Type => new SliceType(itemType);
 
-export class NamedStructLiteral extends Literal {
+export class NamedStructLiteral implements Literal {
   public readonly name: string;
   public readonly contents: StructLiteral;
 
   public constructor(name: string, contents: {[key: string]: Expr} | StructLiteral) {
-    super();
     this.name = name;
     this.contents = (contents instanceof StructLiteral) ? contents : new StructLiteral(contents);
   }
@@ -297,11 +316,10 @@ export class NamedStructLiteral extends Literal {
   }
 }
 
-export class StructLiteral extends Literal {
+export class StructLiteral implements Literal {
   public readonly contents: {[key: string]: Expr};
 
   public constructor(contents: {[key: string]: Expr}) {
-    super();
     this.contents = contents;
   }
 
@@ -318,11 +336,10 @@ export class StructLiteral extends Literal {
   }
 }
 
-export class RawType extends Type {
+export class RawType implements Type {
   public readonly name: string;
 
   constructor(name: string) {
-    super();
     this.name = name;
   }
 
